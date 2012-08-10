@@ -1444,10 +1444,12 @@ struct cgpu_info gpus[MAX_GPUDEVICES]; /* Maximum number apparently possible */
 struct cgpu_info *cpus;
 
 #ifdef HAVE_CURSES
+FILE*CLOG;
 static inline void unlock_curses(void)
 {
 	mutex_unlock(&console_lock);
 }
+#define unlock_curses()  do { fprintf(CLOG, "unlock_curses in %s line %d", __func__, __LINE__); unlock_curses(); } while(0)
 
 static inline void lock_curses(void)
 {
@@ -1464,6 +1466,8 @@ static bool curses_active_locked(void)
 		unlock_curses();
 	return ret;
 }
+#define lock_curses()  do { fprintf(CLOG, "lock_curses in %s line %d", __func__, __LINE__); lock_curses(); } while(0)
+#define curses_active_locked()  (fprintf(CLOG, "curses_active_locked in %s line %d", __func__, __LINE__), curses_active_locked())
 #endif
 
 void tailsprintf(char *f, const char *fmt, ...)
@@ -5641,6 +5645,7 @@ bool add_cgpu(struct cgpu_info*cgpu)
 
 int main(int argc, char *argv[])
 {
+	CLOG=fopen("clog", "w");
 	struct block *block, *tmpblock;
 	struct work *work, *tmpwork;
 	bool pools_active = false;
